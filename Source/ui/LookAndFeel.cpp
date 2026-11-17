@@ -1,5 +1,6 @@
 #include "LookAndFeel.h"
 #include "VT4BinaryData.h"
+#include "../Diagnostics.h"
 
 #include <map>
 
@@ -41,15 +42,25 @@ void useThemeOf (juce::Component& c)
         l->use();
 }
 
+// Interface faces: Inter (SIL OFL), converted to TrueType outlines and
+// renamed "HaldenVT4 Text / Display" so that no installed font, and no other
+// plugin's embedded font, can be confused with them (on macOS a font of the
+// same name elsewhere in the host showed as garbled text).
 Fonts& Fonts::get()
 {
     static Fonts f = []
     {
         Fonts x;
-        x.medium        = juce::Typeface::createSystemTypefaceFor (VT4BinaryData::InterMedium_otf,       (size_t) VT4BinaryData::InterMedium_otfSize);
-        x.semibold      = juce::Typeface::createSystemTypefaceFor (VT4BinaryData::InterSemiBold_otf,     (size_t) VT4BinaryData::InterSemiBold_otfSize);
-        x.displayLight  = juce::Typeface::createSystemTypefaceFor (VT4BinaryData::InterDisplayLight_otf, (size_t) VT4BinaryData::InterDisplayLight_otfSize);
-        x.displayMedium = juce::Typeface::createSystemTypefaceFor (VT4BinaryData::InterDisplayMedium_otf,(size_t) VT4BinaryData::InterDisplayMedium_otfSize);
+        auto load = [] (const void* data, int size, const char* what) -> juce::Typeface::Ptr
+        {
+            auto t = juce::Typeface::createSystemTypefaceFor (data, (size_t) size);
+            vt4diag::log (juce::String ("font ") + what + ": " + (t != nullptr ? t->getName() + " " + t->getStyle() : juce::String ("FAILED, system font used")));
+            return t;
+        };
+        x.medium        = load (VT4BinaryData::HaldenVT4TextMedium_ttf,     VT4BinaryData::HaldenVT4TextMedium_ttfSize,     "text medium");
+        x.semibold      = load (VT4BinaryData::HaldenVT4TextSemiBold_ttf,   VT4BinaryData::HaldenVT4TextSemiBold_ttfSize,   "text semibold");
+        x.displayLight  = load (VT4BinaryData::HaldenVT4DisplayLight_ttf,   VT4BinaryData::HaldenVT4DisplayLight_ttfSize,   "display light");
+        x.displayMedium = load (VT4BinaryData::HaldenVT4DisplayMedium_ttf,  VT4BinaryData::HaldenVT4DisplayMedium_ttfSize,  "display medium");
         return x;
     }();
     return f;
@@ -57,6 +68,8 @@ Fonts& Fonts::get()
 
 static juce::Font makeFont (juce::Typeface::Ptr t, float h, float tracking)
 {
+    if (t == nullptr)
+        return juce::Font (juce::FontOptions (h).withKerningFactor (tracking));
     return juce::Font (juce::FontOptions (t).withHeight (h).withKerningFactor (tracking));
 }
 

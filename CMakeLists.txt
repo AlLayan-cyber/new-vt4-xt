@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(HaldenVT4 VERSION 1.1.0 LANGUAGES C CXX)
+project(HaldenVT4 VERSION 1.1.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -54,10 +54,10 @@ juce_add_binary_data(HaldenVT4Data
     HEADER_NAME VT4BinaryData.h
     NAMESPACE   VT4BinaryData
     SOURCES
-        Resources/fonts/Inter-Medium.otf
-        Resources/fonts/Inter-SemiBold.otf
-        Resources/fonts/InterDisplay-Light.otf
-        Resources/fonts/InterDisplay-Medium.otf)
+        Resources/fonts/HaldenVT4Text-Medium.ttf
+        Resources/fonts/HaldenVT4Text-SemiBold.ttf
+        Resources/fonts/HaldenVT4Display-Light.ttf
+        Resources/fonts/HaldenVT4Display-Medium.ttf)
 
 target_sources(HaldenVT4 PRIVATE
     Source/Diagnostics.cpp

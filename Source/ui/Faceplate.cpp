@@ -465,6 +465,7 @@ void Faceplate::paintArt (juce::Graphics& g, float W, float H)
 void Faceplate::paint (juce::Graphics& g)
 {
     useThemeOf (*this);
+    const double tPaint = vt4diag::nowMs();
    #if JUCE_MAC || VT4_VECTOR_PLATE
     const auto& th = themeFor (curModel);
     // macOS: the plate is drawn directly (vector brushed metal + live
@@ -490,6 +491,16 @@ void Faceplate::paint (juce::Graphics& g)
     }
     drawEngraved (g, juce::String::fromUTF8 ("SERIAL N\xc2\xba ") + juce::String (serial).paddedLeft ('0', 4), { 42.0f, 138.0f, 200.0f, 14.0f },
                   Fonts::label (8.4f, 0.24f), juce::Justification::centredLeft, col::brassDim);
+
+    if (! paintLogged)
+    {
+        paintLogged = true;
+        const auto clip = g.getClipBounds();
+        vt4diag::log ("faceplate first paint: " + juce::String (getWidth()) + " x " + juce::String (getHeight()) + ", pixel scale "
+                      + juce::String (g.getInternalContext().getPhysicalPixelScaleFactor(), 2) + ", clip " + clip.toString()
+                      + ", vector context " + (g.getInternalContext().isVectorDevice() ? "yes" : "no")
+                      + ", " + juce::String (vt4diag::nowMs() - tPaint, 1) + " ms");
+    }
 }
 
 } // namespace vt4ui

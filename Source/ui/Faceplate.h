@@ -58,7 +58,7 @@ private:
     Lamp driveLamp { juce::Colour (0xffff8a2a) }, onLamp { col::amber, true };
 
     int stereoMode = 0, serial = 1, curModel = 0, plateModel = -1;
-    bool steppedMode = true, linkedNow = false;
+    bool steppedMode = true, linkedNow = false, paintLogged = false;
     juce::Image plate;
     float plateScale = 0.0f;
 };
