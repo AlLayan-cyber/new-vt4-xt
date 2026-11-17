@@ -1,0 +1,60 @@
+name: Build plugins
+
+# Push: macOS only (fast). Windows or both: Actions → Build plugins →
+# Run workflow → choose the platform.
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Platform"
+        type: choice
+        options: [macos, windows, both]
+        default: macos
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(github.event_name == 'workflow_dispatch' && (inputs.platform == 'windows' && '["windows-latest"]' || inputs.platform == 'both' && '["macos-14","windows-latest"]' || '["macos-14"]') || '["macos-14"]') }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then TESTS=ON; else TESTS=OFF; fi
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DVT4_BUILD_TESTS=$TESTS -DVT4_FORMATS="$( [ "$RUNNER_OS" = "macOS" ] && echo 'AU;VST3' || echo 'VST3' )"
+
+      - name: Build plugins
+        run: cmake --build build --config Release --parallel --target HaldenVT4_All
+
+      - name: Upload plugins
+        uses: actions/upload-artifact@v4
+        with:
+          name: HaldenVT4-${{ runner.os }}
+          path: |
+            build/HaldenVT4_artefacts/Release/VST3
+            build/HaldenVT4_artefacts/Release/AU
+          if-no-files-found: warn
+
+      # Windows only: the measurement bench on the machine type you use.
+      - name: Measurement bench
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: bash
+        run: |
+          cmake --build build --config Release --parallel --target vt4_bench
+          BIN=$(find build -type f \( -name vt4_bench -o -name vt4_bench.exe \) | head -n 1)
+          "$BIN" quick | tee bench-report.txt
+
+      - name: Upload bench report
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-report-${{ runner.os }}
+          path: bench-report.txt
+          if-no-files-found: ignore
