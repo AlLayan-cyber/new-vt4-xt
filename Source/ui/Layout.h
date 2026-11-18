@@ -6,6 +6,9 @@ namespace vt4ui::layout
 {
     // design space (the editor scales it)
     constexpr int W = 1320;
+    // rack frame around the instrument (design units)
+    constexpr int frameX = 50, frameY = 26;
+    constexpr int TW = W + 2 * frameX;
     constexpr int faceH = 590;
     constexpr int screenH = 300;
     constexpr int headerH = 166;
