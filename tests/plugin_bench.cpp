@@ -458,8 +458,7 @@ static void testEditorResponsive()
         std::printf ("  full window (%d x %d) drawn in software: %.1f ms\n", ed->getWidth(), ed->getHeight(), full);
         if (auto* snap = std::getenv ("VT4_SNAPSHOT"))
         {
-            const float sc = std::getenv ("VT4_SNAPSHOT_SCALE") ? (float) std::atof (std::getenv ("VT4_SNAPSHOT_SCALE")) : 1.0f;
-            auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, sc);
+            auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 1.0f);
             juce::File f (snap); f.deleteFile();
             juce::FileOutputStream os (f);
             juce::PNGImageFormat().writeImageToStream (img, os);
@@ -616,8 +615,7 @@ int main (int argc, char** argv)
         {
             setValue (*p, vt4p::ids::model, (float) m);
             MessageManager::getInstance()->runDispatchLoopUntil (600);
-            const float sc = std::getenv ("VT4_SNAPSHOT_SCALE") ? (float) std::atof (std::getenv ("VT4_SNAPSHOT_SCALE")) : 1.0f;
-            auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, sc);
+            auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 1.0f);
             juce::File f (juce::File (dir).getChildFile ("model" + String (m) + ".png")); f.deleteFile();
             juce::FileOutputStream os (f);
             juce::PNGImageFormat().writeImageToStream (img, os);
