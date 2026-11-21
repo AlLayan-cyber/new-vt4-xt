@@ -36,9 +36,9 @@ void drawMoonMark (juce::Graphics& g, juce::Point<float> c, float d, juce::Colou
     {
         p.addRoundedRectangle (c.x + cx * d - w * d * 0.5f, c.y + y0 * d, w * d, (y1 - y0) * d, w * d * 0.5f);
     };
-    bar (-0.1755f, -0.254f, 0.238f, 0.088f);
+    bar (-0.1775f, -0.252f, 0.240f, 0.078f);
     bar ( 0.0f,    -0.139f, 0.107f, 0.074f);
-    bar ( 0.1755f, -0.385f, 0.369f, 0.088f);
+    bar ( 0.1775f, -0.384f, 0.372f, 0.078f);
     p.setUsingNonZeroWinding (false);
     g.setColour (col::engraveShadow);
     g.fillPath (p, juce::AffineTransform::translation (0.0f, -0.7f));
