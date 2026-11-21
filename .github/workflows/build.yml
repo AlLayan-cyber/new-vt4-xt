@@ -12,6 +12,9 @@ on:
         options: [macos, windows, both]
         default: macos
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -43,6 +46,22 @@ jobs:
             build/HaldenVT4_artefacts/Release/VST3
             build/HaldenVT4_artefacts/Release/AU
           if-no-files-found: warn
+
+      # Ready-to-download zips on the "latest" release page (no login needed)
+      - name: Publish to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd build/HaldenVT4_artefacts/Release
+          NAME="HaldenVT4-$RUNNER_OS.zip"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            powershell -Command "Compress-Archive -Path VST3 -DestinationPath $NAME -Force"
+          else
+            ditto -c -k --keepParent VST3 vst3.zip && mkdir -p pkg && cp -R VST3 AU pkg/ 2>/dev/null; (cd pkg && ditto -c -k . ../$NAME)
+          fi
+          gh release view latest -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create latest -R "$GITHUB_REPOSITORY" --title "Halden VT-4 (latest build)" --notes "Latest builds of Halden VT-4."
+          gh release upload latest "$NAME" -R "$GITHUB_REPOSITORY" --clobber
 
       # Windows only: the measurement bench on the machine type you use.
       - name: Measurement bench
