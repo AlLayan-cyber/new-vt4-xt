@@ -85,7 +85,7 @@ void RearPanel::paint (juce::Graphics& g)
    #else
     {
         const float scale = g.getInternalContext().getPhysicalPixelScaleFactor();
-        if (bgImage.isNull() || std::abs (scale - bgScale) > 0.01f || bgImage.getWidth() != (int) std::ceil (b.getWidth() * scale))
+        if (bgImage.isNull() || ((std::abs (scale - bgScale) > 0.01f || bgImage.getWidth() != (int) std::ceil (b.getWidth() * scale)) && ! liveResizing()))
         {
             bgImage = juce::Image (juce::Image::ARGB, juce::jmax (1, (int) std::ceil (b.getWidth() * scale)), juce::jmax (1, (int) std::ceil (b.getHeight() * scale)), true, juce::SoftwareImageType());
             renderBrushedMetal (bgImage, scale, juce::Colour (0xff292c30), juce::Colour (0xff232528), juce::Colour (0xff1a1c1f), 0x6a09e667u);

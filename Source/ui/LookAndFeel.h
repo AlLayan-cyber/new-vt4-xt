@@ -62,6 +62,15 @@ void drawKnob (juce::Graphics&, juce::Rectangle<float> bounds, float angle, bool
 // applies the theme of the editor a component belongs to
 void useThemeOf (juce::Component&);
 
+// Live resizing: while the window is being dragged to a new size, cached
+// layers are drawn scaled from the size they were rendered at (fast);
+// they are rendered again, sharp, once the size has settled.
+void noteLiveResize();
+bool liveResizing();
+
+// The Moon Music Label mark: a disc with three vertical slots.
+void drawMoonMark (juce::Graphics&, juce::Point<float> centre, float diameter, juce::Colour);
+
 // Brushed, anodised metal generated per physical pixel (fills the image).
 void renderBrushedMetal (juce::Image&, float scale, juce::Colour top, juce::Colour mid, juce::Colour bottom, uint32_t seed);
 

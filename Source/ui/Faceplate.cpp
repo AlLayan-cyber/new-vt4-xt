@@ -358,6 +358,16 @@ void Faceplate::paintArt (juce::Graphics& g, float W, float H)
         for (int db : { -6, -3, 0, 3, 6 })
             scaleLabel (g, oc, rd + 15.0f, (db + 6) / 12.0, (db > 0 ? "+" : (db < 0 ? juce::String::fromUTF8 ("\xe2\x88\x92") : juce::String())) + juce::String (std::abs (db)), 9.0f);
     }
+    // maker's plate under the meters: Moon mark + MOON AUDIO ENGINEERING
+    {
+        const auto f = Fonts::label (9.0f, 0.32f);
+        const juce::String txt ("MOON AUDIO ENGINEERING");
+        const float tw = juce::GlyphArrangement::getStringWidth (f, txt);
+        const float mark = 13.0f, gap = 7.0f, cy = 154.0f;
+        const float x0 = 0.5f * ((float) layout::vuL.getX() + (float) layout::vuR.getRight()) - 0.5f * (mark + gap + tw);
+        drawMoonMark (g, { x0 + 0.5f * mark, cy }, mark, col::brassDim);
+        drawEngraved (g, txt, { x0 + mark + gap, cy - 7.0f, tw + 6.0f, 14.0f }, f, juce::Justification::centredLeft, col::brassDim);
+    }
     // header separator
     engravedLine (g, 16.0f, (float) headerH, W - 16.0f, (float) headerH, juce::Colours::white.withAlpha (0.06f));
 
@@ -475,7 +485,7 @@ void Faceplate::paint (juce::Graphics& g)
     paintArt (g, (float) getWidth(), (float) getHeight());
    #else
     const float scale = g.getInternalContext().getPhysicalPixelScaleFactor();
-    if (plate.isNull() || std::abs (scale - plateScale) > 0.01f || plateModel != curModel)
+    if (plate.isNull() || plateModel != curModel || (std::abs (scale - plateScale) > 0.01f && ! liveResizing()))
         renderPlate (getWidth(), getHeight(), scale);
     drawCachedLayer (g, plate, plateScale);
    #endif

@@ -79,6 +79,8 @@ void VT4AudioProcessorEditor::resized()
 {
     const float scale = (float) getWidth() / (float) layout::W;
     const int h = layout::faceH + (screenOpen ? layout::screenH : 0);
+    vt4ui::noteLiveResize();
+    resizeSettlePending = true;
     content.setBounds (0, 0, layout::W, h);
     content.setTransform (juce::AffineTransform::scale (scale));
     faceplate.setBounds (0, 0, layout::W, layout::faceH);
@@ -198,6 +200,13 @@ void VT4AudioProcessorEditor::timerCallback()
     }
     if (model.ready() && model.sameUnit (p) && model.update (p))
         screen.repaint();
+
+    // the window size has settled: render the cached layers sharp again
+    if (resizeSettlePending && ! vt4ui::liveResizing())
+    {
+        resizeSettlePending = false;
+        repaint();
+    }
 
     // model: VT-4 circuit, MPEQ or PSEQ — theme, curves and which controls apply
     const int refModel = proc.pp.readModel();

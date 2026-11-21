@@ -144,6 +144,7 @@ private:
     vt4ui::RearPanel rear;
 
     bool screenOpen = true, rearShown = false;
+    bool resizeSettlePending = false;
     DisplayModelBuilder modelBuilder;
     juce::ComponentPeer* rendererPeer = nullptr;
     double lastTick = 0.0;

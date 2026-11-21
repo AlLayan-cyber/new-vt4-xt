@@ -23,6 +23,28 @@ const Theme& themeFor (int model)
 }
 
 static int gTheme = 0;
+static double gLastResizeMs = -1.0e9;
+
+void noteLiveResize() { gLastResizeMs = juce::Time::getMillisecondCounterHiRes(); }
+bool liveResizing()   { return juce::Time::getMillisecondCounterHiRes() - gLastResizeMs < 250.0; }
+
+void drawMoonMark (juce::Graphics& g, juce::Point<float> c, float d, juce::Colour colour)
+{
+    juce::Path p;
+    p.addEllipse (c.x - d * 0.5f, c.y - d * 0.5f, d, d);
+    auto bar = [&] (float cx, float y0, float y1, float w)
+    {
+        p.addRoundedRectangle (c.x + cx * d - w * d * 0.5f, c.y + y0 * d, w * d, (y1 - y0) * d, w * d * 0.5f);
+    };
+    bar (-0.1755f, -0.254f, 0.238f, 0.088f);
+    bar ( 0.0f,    -0.139f, 0.107f, 0.074f);
+    bar ( 0.1755f, -0.385f, 0.369f, 0.088f);
+    p.setUsingNonZeroWinding (false);
+    g.setColour (col::engraveShadow);
+    g.fillPath (p, juce::AffineTransform::translation (0.0f, -0.7f));
+    g.setColour (colour);
+    g.fillPath (p);
+}
 
 void useTheme (int model)
 {
@@ -187,7 +209,7 @@ void paintBrushedMetalVector (juce::Graphics& g, juce::Rectangle<float> a, juce:
         {
             const float len = 20.0f + 120.0f * uni();
             const float v = 0.6f * row + 0.4f * (uni() * 2.0f - 1.0f);
-            if (visible)
+            if (visible && x + len >= (float) clip.getX() && x <= (float) clip.getRight())
             {
                 g.setColour (v > 0.0f ? juce::Colours::white.withAlpha (0.035f * v) : juce::Colours::black.withAlpha (-0.05f * v));
                 g.fillRect (x, y, juce::jmin (len, a.getRight() - x), 1.0f);
@@ -402,6 +424,12 @@ void drawKnob (juce::Graphics& g, juce::Rectangle<float> b, float angle, bool la
     const int px = juce::jmax (8, (int) std::ceil (juce::jmin (b.getWidth(), b.getHeight()) * scale));
     auto& m = cache[(large ? 1 : 0) + (dark ? 2 : 0)];
     auto it = m.find (px);
+    if (it == m.end() && liveResizing() && ! m.empty())
+    {
+        // nearest size already rendered, stretched, until the size settles
+        it = m.lower_bound (px);
+        if (it == m.end()) it = std::prev (it);
+    }
     if (it == m.end())
     {
         if (m.size() > 24) m.clear();

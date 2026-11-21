@@ -135,7 +135,7 @@ void VuMeter::paint (juce::Graphics& g)
 {
     useThemeOf (*this);
     const float scale = g.getInternalContext().getPhysicalPixelScaleFactor();
-    if (face.isNull() || std::abs (scale - faceScale) > 0.01f || face.getWidth() != (int) std::ceil (getWidth() * scale))
+    if (face.isNull() || ((std::abs (scale - faceScale) > 0.01f || face.getWidth() != (int) std::ceil (getWidth() * scale)) && ! liveResizing()))
         renderFace (getWidth(), getHeight(), scale);
     drawCachedLayer (g, face, faceScale);
 
@@ -243,7 +243,7 @@ void BPlusMeter::paint (juce::Graphics& g)
 {
     useThemeOf (*this);
     const float scale = g.getInternalContext().getPhysicalPixelScaleFactor();
-    if (face.isNull() || std::abs (scale - faceScale) > 0.01f || face.getWidth() != (int) std::ceil (getWidth() * scale))
+    if (face.isNull() || ((std::abs (scale - faceScale) > 0.01f || face.getWidth() != (int) std::ceil (getWidth() * scale)) && ! liveResizing()))
         renderFace (getWidth(), getHeight(), scale);
     drawCachedLayer (g, face, faceScale);
 
