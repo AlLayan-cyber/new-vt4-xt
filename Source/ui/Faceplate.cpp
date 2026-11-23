@@ -476,7 +476,7 @@ void Faceplate::paint (juce::Graphics& g)
 {
     useThemeOf (*this);
     const double tPaint = vt4diag::nowMs();
-   #if JUCE_MAC || VT4_VECTOR_PLATE
+   #if VT4_VECTOR_PLATE
     const auto& th = themeFor (curModel);
     // macOS: the plate is drawn directly (vector brushed metal + live
     // engraving) — no large pre-rendered layer, which some macOS graphics

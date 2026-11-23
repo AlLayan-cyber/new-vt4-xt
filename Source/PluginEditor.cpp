@@ -2,12 +2,97 @@
 
 using namespace vt4ui;
 
+#if JUCE_MAC || VT4_SOFTWARE_UI
+// macOS: the whole interface is drawn by JUCE's own software renderer into an
+// offscreen image (the same rasteriser the Windows build uses, which shows the
+// panel correctly), and that image is put on screen in tiles. CoreGraphics then
+// only copies finished pixels: no text, gradients, clipping or paths of ours
+// go through it. Only the regions that changed are drawn again.
+namespace
+{
+struct SoftwareRenderedImage final : public juce::CachedComponentImage
+{
+    explicit SoftwareRenderedImage (juce::Component& c) : owner (c) {}
+
+    void paint (juce::Graphics& g) override
+    {
+        const float scale = g.getInternalContext().getPhysicalPixelScaleFactor();
+        const auto compBounds = owner.getLocalBounds();
+        const auto imageBounds = (compBounds.toFloat() * scale).getSmallestIntegerContainer();
+
+        if (image.isNull() || image.getBounds() != imageBounds.withZeroOrigin())
+        {
+            // while the window is being dragged, show the last picture stretched
+            if (image.isValid() && vt4ui::liveResizing())
+            {
+                blit (g, compBounds);
+                return;
+            }
+            image = juce::Image (juce::Image::ARGB, juce::jmax (1, imageBounds.getWidth()), juce::jmax (1, imageBounds.getHeight()),
+                                 true, juce::SoftwareImageType());
+            imageScale = (float) image.getWidth() / (float) juce::jmax (1, compBounds.getWidth());
+            validArea.clear();
+            if (! logged)
+            {
+                logged = true;
+                vt4diag::log ("editor: macOS software-rendered interface, " + juce::String (image.getWidth()) + " x " + juce::String (image.getHeight())
+                              + " px (display scale " + juce::String (scale, 2) + ")");
+            }
+        }
+
+        if (! validArea.containsRectangle (compBounds))
+        {
+            juce::Graphics imG (image);
+            imG.addTransform (juce::AffineTransform::scale (imageScale));
+            for (auto& r : validArea)
+                imG.excludeClipRegion (r);
+            imG.setColour (juce::Colour (0xff121315));
+            imG.fillRect (compBounds);
+            owner.paintEntireComponent (imG, true);
+            validArea = compBounds;
+        }
+        blit (g, compBounds);
+    }
+
+    void blit (juce::Graphics& g, juce::Rectangle<int> compBounds)
+    {
+        // in tiles of at most 256 px
+        const float sx = (float) compBounds.getWidth() / (float) image.getWidth();
+        const float sy = (float) compBounds.getHeight() / (float) image.getHeight();
+        g.setColour (juce::Colours::black);
+        constexpr int T = 256;
+        for (int y = 0; y < image.getHeight(); y += T)
+            for (int x = 0; x < image.getWidth(); x += T)
+            {
+                const auto r = juce::Rectangle<int> (x, y, T, T).getIntersection (image.getBounds());
+                g.drawImage (image.getClippedImage (r),
+                             juce::Rectangle<float> ((float) r.getX() * sx, (float) r.getY() * sy, (float) r.getWidth() * sx, (float) r.getHeight() * sy),
+                             juce::RectanglePlacement::stretchToFit);
+            }
+    }
+
+    bool invalidateAll() override                                { validArea.clear(); return true; }
+    bool invalidate (const juce::Rectangle<int>& area) override  { validArea.subtract (area); return true; }
+    void releaseResources() override                             { image = juce::Image(); }
+
+    juce::Component& owner;
+    juce::Image image;
+    float imageScale = 1.0f;
+    juce::RectangleList<int> validArea;
+    bool logged = false;
+};
+}
+#endif
+
 VT4AudioProcessorEditor::VT4AudioProcessorEditor (VT4AudioProcessor& p)
     : AudioProcessorEditor (&p), proc (p), faceplate (p.apvts), screen (p, model), rear (p.apvts)
 {
     const double t0 = vt4diag::nowMs();
     setLookAndFeel (&lnf);
     addAndMakeVisible (content);
+   #if JUCE_MAC || VT4_SOFTWARE_UI
+    content.setCachedComponentImage (new SoftwareRenderedImage (content));
+   #endif
     content.addAndMakeVisible (faceplate);
     content.addAndMakeVisible (screen);
     content.addChildComponent (rear);
@@ -46,6 +131,7 @@ VT4AudioProcessorEditor::~VT4AudioProcessorEditor()
 // (the GPU); on some graphics drivers that can stall the whole desktop
 // (host and mouse) when the window is hidden, shown or redrawn heavily.
 // The interface is drawn from cached images, so the CPU renderer is cheap.
+
 void VT4AudioProcessorEditor::chooseRenderer()
 {
    #if JUCE_WINDOWS

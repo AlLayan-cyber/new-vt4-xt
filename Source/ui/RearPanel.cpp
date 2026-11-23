@@ -80,7 +80,7 @@ void RearPanel::paint (juce::Graphics& g)
     useThemeOf (*this);
     const auto b = getLocalBounds().toFloat();
     // the same brushed, anodised stock as the front, a shade darker
-   #if JUCE_MAC || VT4_VECTOR_PLATE
+   #if VT4_VECTOR_PLATE
     paintBrushedMetalVector (g, b, juce::Colour (0xff292c30), juce::Colour (0xff232528), juce::Colour (0xff1a1c1f), 0x6a09e667u);
    #else
     {
